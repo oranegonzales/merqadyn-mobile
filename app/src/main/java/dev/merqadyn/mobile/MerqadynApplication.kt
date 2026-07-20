@@ -3,8 +3,8 @@ package dev.merqadyn.mobile
 import android.app.Application
 import androidx.room.Room
 import dev.merqadyn.mobile.data.MerchantRepository
+import dev.merqadyn.mobile.data.CredentialStore
 import dev.merqadyn.mobile.data.local.MerqadynDatabase
-import dev.merqadyn.mobile.data.remote.ApiFactory
 import dev.merqadyn.mobile.sync.SyncWorker
 
 class AppContainer(application: Application) {
@@ -14,7 +14,9 @@ class AppContainer(application: Application) {
         "merqadyn.db",
     ).build()
 
-    val repository = MerchantRepository(database, ApiFactory.create()) {
+    private val credentials = CredentialStore(application)
+
+    val repository = MerchantRepository(database, credentials) {
         SyncWorker.enqueue(application)
     }
 }

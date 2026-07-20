@@ -6,9 +6,11 @@ import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.BackoffPolicy
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import dev.merqadyn.mobile.MerqadynApplication
+import java.util.concurrent.TimeUnit
 
 class SyncWorker(
     appContext: Context,
@@ -16,8 +18,7 @@ class SyncWorker(
 ) : CoroutineWorker(appContext, params) {
     override suspend fun doWork(): Result = try {
         val repository = (applicationContext as MerqadynApplication).container.repository
-        repository.sync()
-        Result.success()
+        if (repository.sync()) Result.retry() else Result.success()
     } catch (_: Exception) {
         Result.retry()
     }
@@ -28,10 +29,11 @@ class SyncWorker(
         fun enqueue(context: Context) {
             val request = OneTimeWorkRequestBuilder<SyncWorker>()
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
                 .build()
             WorkManager.getInstance(context).enqueueUniqueWork(
                 UNIQUE_WORK,
-                ExistingWorkPolicy.APPEND_OR_REPLACE,
+                ExistingWorkPolicy.KEEP,
                 request,
             )
         }

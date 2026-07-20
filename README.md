@@ -1,127 +1,103 @@
 # Merqadyn Mobile
 
-Merqadyn Mobile is a native Android merchant operations app for the [Merqadyn API](https://github.com/oranegonzales/merqadyn-apido). It keeps products, inventory, and an outgoing mutation queue on the device so day-to-day work can continue through an interrupted connection.
+Merqadyn Mobile is the offline-first Android client for [Merqadyn API](https://github.com/oranegonzales/merqadyn-apido). Room remains the UI source of truth, writes enter a durable mutation queue, and WorkManager delivers bounded batches when connectivity returns.
 
-## What it does
+## Capabilities
 
-- reads the merchant catalog and inventory into a local Room database
-- records stock receipts and count corrections while offline
-- creates and edits catalog items through the same durable queue
-- sends queued work with stable mutation IDs, making retries idempotent
-- schedules delivery with WorkManager when network access returns
-- shows conflicts and rejected changes without silently discarding them
-
-The app does not let a user type an arbitrary server URL. The endpoint and credentials are build-time settings so normal users cannot redirect merchant data from inside the app.
-
-## Stack
-
-- Kotlin and Jetpack Compose
-- Room
-- WorkManager
-- Retrofit, OkHttp, and Kotlin serialization
-- Android API 36, minimum API 23
-- Gradle 8.13 and JDK 17
+- browse a paginated merchant catalog and inventory
+- record stock changes and catalog work without a connection
+- replay writes safely with stable mutation IDs
+- retain conflicts and rejected work for review
+- pair each phone with a one-time, 10-minute enrollment code
+- keep the device token encrypted with Android Keystore
+- retry one unique background sync with exponential backoff
 
 ## Windows setup
 
 ### 1. Start the API
 
-Clone the API beside this repository so the folders look like this:
+Keep the repositories beside one another:
 
 ```text
 C:\Users\Guy\merqadyn-api
 C:\Users\Guy\merqadyn-mobile
 ```
 
-Start Docker Desktop and wait until its engine is ready. Then run:
+Start Docker Desktop, then run:
 
 ```powershell
 cd C:\Users\Guy\merqadyn-api
-docker compose up --build
-```
-
-Verify it in a second PowerShell window:
-
-```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start-local.ps1 -Detach
 curl.exe http://127.0.0.1:8080/actuator/health
 ```
 
 ### 2. Install Android tools
 
-Install the current stable [Android Studio](https://developer.android.com/studio). In **Tools > SDK Manager**, install:
+Install Android Studio with Android SDK Platform 36, Build-Tools 36, platform-tools, and either an API 36 emulator or a USB-debuggable Android phone. JDK 17 is required for command-line builds.
 
-- Android SDK Platform 36
-- Android SDK Build-Tools
-- Android Emulator
-- an API 36 Google APIs x86_64 system image
+### 3. Configure and create an enrollment code
 
-Create and start a phone in **Tools > Device Manager**.
-
-### 3. Configure the app
-
-The helper reads the generated admin credentials from the API's `.env` file and writes them to this project's ignored `local.properties` file:
+For a USB-connected physical phone (recommended for local testing):
 
 ```powershell
 cd C:\Users\Guy\merqadyn-mobile
-powershell -ExecutionPolicy Bypass -File .\scripts\configure-local.ps1
-```
-
-It keeps Android Studio's existing `sdk.dir` setting. The default API URL is `http://10.0.2.2:8080/`, which is how an Android emulator reaches port 8080 on the Windows host.
-
-If the two repositories are not siblings, pass the API environment file explicitly:
-
-```powershell
-.\scripts\configure-local.ps1 -ApiEnvPath C:\path\to\merqadyn-api\.env
-```
-
-### 4. Run
-
-Open `merqadyn-mobile` in Android Studio, wait for Gradle sync, choose the running emulator, and press **Run**.
-
-The first refresh imports the seeded demo merchant. Use these sections:
-
-- **Overview** summarizes the local copy and queue.
-- **Inventory** lets you tap an item and record a positive or negative adjustment.
-- **Catalog** creates or edits product records.
-- **Queue** shows work waiting for the API and any conflicts or rejections.
-
-Turn off the emulator's Wi-Fi to test offline entry. Make an inventory adjustment, confirm it appears in **Queue**, turn Wi-Fi back on, then choose **Send queued changes**. WorkManager will also retry queued work after connectivity returns.
-
-### Physical Android device
-
-A physical device cannot use `10.0.2.2`. Find the Windows computer's LAN IPv4 address with `ipconfig`, allow port 8080 through Windows Firewall only on your private network, then configure the app before building:
-
-```powershell
-$env:MERQADYN_API_URL = "http://192.168.1.25:8080/"
+powershell -ExecutionPolicy Bypass -File .\scripts\configure-local.ps1 -Target UsbPhone
 .\gradlew.bat installDebug
 ```
 
-Replace the example address with your computer's actual LAN address. Use HTTPS for any non-local deployment.
+Approve USB debugging on the phone. The helper uses `adb reverse`, prints a short enrollment code, and writes only the API address and device ID to ignored `local.properties`. Enter the printed code in the app.
 
-## Command-line checks
+For an emulator:
 
-With JDK 17 and Android SDK 36 configured:
+```powershell
+.\scripts\configure-local.ps1 -Target Emulator
+.\gradlew.bat installDebug
+```
+
+For Wi-Fi/LAN testing:
+
+```powershell
+.\scripts\configure-local.ps1 -Target LanPhone
+.\gradlew.bat installDebug
+```
+
+Keep both devices on the same trusted private network. Permit inbound TCP 8080 only on the Windows Private firewall profile. LAN HTTP and `adb reverse` are debug conveniences; release builds require HTTPS.
+
+If the API repository is elsewhere, pass `-ApiEnvPath C:\path\to\merqadyn-api\.env`.
+
+## Test the workflow
+
+1. Open **Inventory**, select a row, and save an adjustment.
+2. Confirm the change appears in **Queue**.
+3. Disable the phone network, make another change, and confirm the app remains usable.
+4. Restore connectivity and choose **Send queued changes**.
+5. Confirm accepted work leaves the queue and the API website reflects the new quantity.
+6. Remove phone access from the bottom of **Queue** and confirm the enrollment screen returns.
+
+Run the full local check with:
 
 ```powershell
 .\gradlew.bat clean testDebugUnitTest lintDebug assembleDebug
 ```
 
-The debug APK is written under `app\build\outputs\apk\debug\`.
+The debug APK is written to `app\build\outputs\apk\debug\app-debug.apk` and is also retained by successful GitHub Actions runs.
 
-## Configuration keys
+## Configuration
 
-| Key | Purpose | Local default |
+| Key | Purpose | Debug default |
 | --- | --- | --- |
-| `MERQADYN_API_URL` | API base URL fixed into the build | `http://10.0.2.2:8080/` |
-| `MERQADYN_ADMIN_USER` | Basic-auth username for mutations | read from API `.env` |
-| `MERQADYN_ADMIN_PASSWORD` | Basic-auth password for mutations | read from API `.env` |
-| `MERQADYN_DEVICE_ID` | Registered device used by sync | seeded HWT device |
+| `MERQADYN_API_URL` | Initial address on the enrollment screen | `http://10.0.2.2:8080/` |
+| `MERQADYN_DEVICE_ID` | Registered phone identity | seeded HWT device |
 
-Do not commit `local.properties`, `.env` files, keystores, or production credentials.
+Administrator credentials and device tokens are never placed in `BuildConfig`. The one-time setup helper uses the local admin credential only to request an enrollment code; the app redeems that code for a device-scoped token.
 
-## Design and behavior
+## Engineering notes
 
-See [docs/architecture.md](docs/architecture.md) for the component map and [docs/offline-sync.md](docs/offline-sync.md) for queue and conflict behavior.
+- [Architecture](docs/architecture.md)
+- [Offline sync](docs/offline-sync.md)
+- [Scaling](docs/scaling.md)
+- [Threat model](docs/threat-model.md)
+- [Security policy](SECURITY.md)
 
 ## License
 

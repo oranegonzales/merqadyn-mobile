@@ -75,6 +75,7 @@ fun MerchantApp(
     onUpdateProduct: (String, ProductDraft) -> Unit,
     onRetry: (String) -> Unit,
     onDismiss: (String) -> Unit,
+    onRemoveEnrollment: () -> Unit,
 ) {
     var section by remember { mutableStateOf(AppSection.Overview) }
     val snackbar = remember { SnackbarHostState() }
@@ -167,7 +168,7 @@ fun MerchantApp(
                 AppSection.Overview -> OverviewScreen(snapshot, onRefresh, onSync)
                 AppSection.Inventory -> InventoryScreen(snapshot.inventory, onAdjustStock)
                 AppSection.Catalog -> CatalogScreen(snapshot.products, snapshot.syncState.currency, onCreateProduct, onUpdateProduct)
-                AppSection.Queue -> QueueScreen(snapshot.mutations, snapshot.syncState, onSync, onRetry, onDismiss)
+                AppSection.Queue -> QueueScreen(snapshot.mutations, snapshot.syncState, onSync, onRetry, onDismiss, onRemoveEnrollment)
             }
         }
     }
