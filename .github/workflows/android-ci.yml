@@ -32,7 +32,7 @@ jobs:
       - name: Test, lint, and assemble
         run: ./gradlew clean testDebugUnitTest lintDebug assembleDebug --no-build-cache
       - name: Upload debug APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: merqadyn-mobile-debug
           path: app/build/outputs/apk/debug/app-debug.apk
