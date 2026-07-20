@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.Merqadyn" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#191A1D</item>
+        <item name="android:navigationBarColor">#F4F0E8</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+</resources>
