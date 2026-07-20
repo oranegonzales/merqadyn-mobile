@@ -105,9 +105,9 @@ class MerchantRepository(
 
             db.withTransaction {
                 products.clearServerProducts()
-                products.upsertAll(remoteProducts.map(ProductDto::toEntity))
+                products.upsertAll(remoteProducts.map { it.toEntity() })
                 inventory.clear()
-                inventory.upsertAll(remoteInventory.map(InventoryDto::toEntity))
+                inventory.upsertAll(remoteInventory.map { it.toEntity() })
                 state.upsert(
                     current.copy(
                         merchantId = profile.merchantId,
