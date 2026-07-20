@@ -1,15 +1,15 @@
 # Security policy
 
-## Reporting a vulnerability
+Report vulnerabilities privately through GitHub Security Advisories. Do not publish credentials, merchant data, or exploit steps in a public issue.
 
-Please report vulnerabilities privately through GitHub's security advisory feature. Do not open a public issue containing credentials, customer data, or working exploit details.
+## Security boundary
 
-## Local and production configuration
+- A one-time, 10-minute code exchanges for a random device-scoped token; the Android app never receives the API administrator password.
+- Android Keystore AES-GCM encrypts the token at rest and binds ciphertext to the device ID as additional authenticated data.
+- Android backup and device transfer exclude application files, databases, and preferences.
+- Release builds reject cleartext traffic and trust platform certificate authorities. Debug builds permit HTTP only to loopback and private-network addresses.
+- Screenshots and non-secure display capture are blocked for the activity.
+- API addresses cannot include embedded credentials, paths, query parameters, or fragments.
+- Removing phone access revokes the server credential, then deletes the token and local merchant records from the device.
 
-- Keep `local.properties`, API `.env` files, signing keys, and credentials out of Git.
-- Use the included helper only on a trusted development computer.
-- Use HTTPS for deployed API traffic. Cleartext HTTP is enabled only by the debug manifest for local Android development.
-- Replace the seeded device ID with an enrolled device identity before a production rollout.
-- Use a dedicated least-privilege mobile authentication flow before exposing the API beyond a controlled demo environment.
-
-The application disables Android backup to reduce accidental copying of its local merchant database. This is not a replacement for encrypted device storage or an application-level authentication screen in a production deployment.
+For production, terminate TLS at a maintained ingress, use an organization-controlled domain, distribute signed release builds through managed channels, revoke lost devices server-side, and monitor authentication failures. Never commit `local.properties`, `.env` files, signing keys, or production credentials.

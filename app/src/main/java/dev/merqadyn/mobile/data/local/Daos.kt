@@ -23,6 +23,9 @@ interface ProductDao {
 
     @Query("DELETE FROM products WHERE localOnly = 0")
     suspend fun clearServerProducts()
+
+    @Query("DELETE FROM products")
+    suspend fun clearAll()
 }
 
 @Dao
@@ -54,6 +57,9 @@ interface PendingMutationDao {
     @Query("SELECT * FROM pending_mutations WHERE state = 'QUEUED' ORDER BY createdAt LIMIT :limit")
     suspend fun queued(limit: Int): List<PendingMutationEntity>
 
+    @Query("SELECT COUNT(*) FROM pending_mutations WHERE state = 'QUEUED'")
+    suspend fun queuedCount(): Int
+
     @Query("SELECT COUNT(*) FROM pending_mutations WHERE state IN ('QUEUED', 'UPLOADING')")
     fun observePendingCount(): Flow<Int>
 
@@ -74,6 +80,9 @@ interface PendingMutationDao {
 
     @Query("DELETE FROM pending_mutations WHERE state = 'APPLIED'")
     suspend fun deleteApplied()
+
+    @Query("DELETE FROM pending_mutations")
+    suspend fun clearAll()
 }
 
 @Dao
@@ -86,4 +95,7 @@ interface SyncStateDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(state: SyncStateEntity)
+
+    @Query("DELETE FROM sync_state")
+    suspend fun clear()
 }

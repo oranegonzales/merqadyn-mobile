@@ -36,14 +36,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
 
-        buildConfigField("String", "API_BASE_URL", quoted(setting("MERQADYN_API_URL", "http://10.0.2.2:8080/")))
-        buildConfigField("String", "ADMIN_USER", quoted(setting("MERQADYN_ADMIN_USER")))
-        buildConfigField("String", "ADMIN_PASSWORD", quoted(setting("MERQADYN_ADMIN_PASSWORD")))
         buildConfigField("String", "DEVICE_ID", quoted(setting("MERQADYN_DEVICE_ID", "55555555-5555-4555-8555-555555555551")))
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "API_BASE_URL", quoted(setting("MERQADYN_API_URL", "http://10.0.2.2:8080/")))
+        }
         release {
+            buildConfigField("String", "API_BASE_URL", quoted(setting("MERQADYN_API_URL", "https://api.example.invalid/")))
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

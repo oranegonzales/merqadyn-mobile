@@ -295,7 +295,9 @@ fun QueueScreen(
     onSync: () -> Unit,
     onRetry: (String) -> Unit,
     onDismiss: (String) -> Unit,
+    onRemoveEnrollment: () -> Unit,
 ) {
+    var confirmRemoval by remember { mutableStateOf(false) }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(20.dp),
@@ -335,6 +337,30 @@ fun QueueScreen(
                 }
             }
         }
+        item {
+            Spacer(Modifier.height(18.dp))
+            HorizontalDivider(color = Rule)
+            Spacer(Modifier.height(12.dp))
+            TextButton(onClick = { confirmRemoval = true }) { Text("Remove this phone's access") }
+        }
+    }
+
+    if (confirmRemoval) {
+        AlertDialog(
+            onDismissRequest = { confirmRemoval = false },
+            title = { Text("Remove phone access?") },
+            text = { Text("This removes the device token and local records from this phone. The server record is kept for audit history.") },
+            confirmButton = {
+                Button(
+                    onClick = { confirmRemoval = false; onRemoveEnrollment() },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    shape = cardShape,
+                ) { Text("Remove access") }
+            },
+            dismissButton = { TextButton(onClick = { confirmRemoval = false }) { Text("Cancel") } },
+            shape = cardShape,
+            containerColor = Chalk,
+        )
     }
 }
 

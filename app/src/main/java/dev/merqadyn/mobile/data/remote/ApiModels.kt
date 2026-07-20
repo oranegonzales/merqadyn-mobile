@@ -29,6 +29,12 @@ object BigDecimalSerializer : KSerializer<BigDecimal> {
 data class PublicConfigDto(val demoMerchantId: String)
 
 @Serializable
+data class RedeemEnrollmentRequestDto(val deviceId: String, val code: String)
+
+@Serializable
+data class DeviceCredentialsDto(val merchantId: String, val deviceId: String, val deviceToken: String)
+
+@Serializable
 data class ProductDto(
     val id: String,
     val sku: String,
@@ -72,6 +78,28 @@ data class OverviewDto(
     val lowStockItems: Int,
     val conflictsLast24Hours: Long,
     val latestCursor: Long,
+)
+
+@Serializable
+data class MerchantContextDto(
+    val merchant: MerchantDto,
+    val latestCursor: Long,
+)
+
+@Serializable
+data class ProductPageDto(
+    val items: List<ProductDto>,
+    val page: Int,
+    val size: Int,
+    val hasMore: Boolean,
+)
+
+@Serializable
+data class InventoryPageDto(
+    val items: List<InventoryDto>,
+    val page: Int,
+    val size: Int,
+    val hasMore: Boolean,
 )
 
 @Serializable

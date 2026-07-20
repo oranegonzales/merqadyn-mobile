@@ -21,11 +21,12 @@ flowchart TD
 | Repository | Validate operations, queue mutations, refresh snapshots, resolve results |
 | Room | Persist products, inventory, sync cursor, and mutations |
 | WorkManager | Retry queued work under a network constraint and after process restarts |
-| API client | Serialize the established Merqadyn HTTP contract and apply Basic authentication to mutations |
+| Credential store | Encrypt the device token with Android Keystore and expose the current enrollment |
+| API client | Serialize the Merqadyn HTTP contract and apply device-scoped authentication |
 
 ## Configuration boundary
 
-`BuildConfig` receives the API base URL, registered device ID, and credentials from environment variables or ignored `local.properties`. There is no editable endpoint in the user interface. Debug builds permit cleartext traffic for local development; release builds retain Android's default cleartext restriction.
+`BuildConfig` receives only an initial API URL and registered device ID. The app exchanges a short-lived code for a device token, then stores that token encrypted with Android Keystore. Debug builds permit cleartext traffic only to loopback and private addresses; release builds require HTTPS.
 
 ## Local inventory projection
 

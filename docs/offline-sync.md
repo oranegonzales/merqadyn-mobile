@@ -11,6 +11,7 @@ Each user write becomes a Room row before the app asks the network for anything.
 5. Applied rows are removed. Conflicts and rejections are retained for the Queue screen.
 6. Products and inventory are refreshed from authoritative API snapshots.
 7. The returned cursor and completion time are stored in Room.
+8. If more than 100 writes remain, the worker backs off and schedules the next bounded batch rather than creating overlapping jobs.
 
 If transport fails, uploading rows return to queued state. Retrying does not create a new mutation ID. The API's processed-mutation ledger therefore returns the original result instead of applying the same operation twice.
 

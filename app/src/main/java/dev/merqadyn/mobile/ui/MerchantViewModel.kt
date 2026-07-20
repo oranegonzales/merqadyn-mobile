@@ -6,14 +6,16 @@ import androidx.lifecycle.viewModelScope
 import dev.merqadyn.mobile.data.MerchantRepository
 import dev.merqadyn.mobile.data.MerchantSnapshot
 import dev.merqadyn.mobile.data.ProductDraft
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class MerchantViewModel(private val repository: MerchantRepository) : ViewModel() {
+    val connectionProfile = repository.connectionProfile
+
     val snapshot: StateFlow<MerchantSnapshot> = repository.snapshot.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
@@ -27,7 +29,17 @@ class MerchantViewModel(private val repository: MerchantRepository) : ViewModel(
     val notice = _notice.asStateFlow()
 
     init {
-        refresh(silent = true)
+        if (repository.connectionProfile.value != null) refresh(silent = true)
+    }
+
+    fun enroll(serverUrl: String, deviceId: String, code: String) = perform {
+        repository.enroll(serverUrl, deviceId, code)
+        _notice.value = "This phone is ready to use."
+    }
+
+    fun removeEnrollment() = perform {
+        val revoked = repository.removeEnrollment()
+        _notice.value = if (revoked) null else "Local access was removed, but server revocation could not be confirmed. Ask an administrator to revoke this device."
     }
 
     fun refresh(silent: Boolean = false) = perform(silent) {

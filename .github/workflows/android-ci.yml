@@ -29,6 +29,12 @@ jobs:
         run: yes | sdkmanager --licenses > /dev/null || true
       - name: Install Android SDK 36
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Validate PowerShell helper
+        shell: pwsh
+        run: |
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile("scripts/configure-local.ps1", [ref]$null, [ref]$errors)
+          if ($errors.Count -gt 0) { $errors | ForEach-Object { Write-Error $_ }; exit 1 }
       - name: Test, lint, and assemble
         run: ./gradlew clean testDebugUnitTest lintDebug assembleDebug --no-build-cache
       - name: Upload debug APK
