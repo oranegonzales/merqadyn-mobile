@@ -1,6 +1,6 @@
 # Merqadyn Mobile
 
-Merqadyn Mobile is the offline-first Android client for [Merqadyn API](https://github.com/oranegonzales/merqadyn-apido). Room remains the UI source of truth, writes enter a durable mutation queue, and WorkManager delivers bounded batches when connectivity returns.
+Merqadyn Mobile is the offline-first Android client for [Merqadyn API](https://github.com/oranegonzales/merqadyn-api). Room remains the UI source of truth, writes enter a durable mutation queue, and WorkManager delivers bounded batches when connectivity returns.
 
 ## Capabilities
 
