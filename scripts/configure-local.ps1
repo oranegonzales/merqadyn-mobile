@@ -15,7 +15,7 @@ $ErrorActionPreference = "Stop"
 function Read-EnvironmentFile {
     param([string]$Path)
     if (-not (Test-Path $Path)) {
-        throw "API environment file was not found at $Path. Start merqadyn-apido with scripts/start-local.ps1 first."
+        throw "API environment file was not found at $Path. Start merqadyn-api with scripts/start-local.ps1 first."
     }
     $result = @{}
     Get-Content $Path | ForEach-Object {
